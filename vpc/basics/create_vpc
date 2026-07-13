@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# Create vpc
+
+VPC_ID=$(aws ec2 create-vpc --cidr-block "172.31.0.0/16" --region us-east-1 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=my-vpc-3}]' --query Vpc.VpcId --output text)
+
+echo $VPC_ID
+
+#Turn on DNS Hostnames
+
+aws ec2 modify-vpc-attribute --vpc-id $VPC_ID --enable-dns-hostnames "{\"Value\":true}"
+ 
+# Create IGW
+
+IGW_ID=$(aws ec2 create-internet-gateway --query InternetGateway.InternetGatewayId --output text) 
+
+echo "IGW_ID: $IGW_ID"
+
+# Attatch IGW
+
+aws ec2 attach-internet-gateway --internet-gateway-id $IGW_ID --vpc-id $VPC_ID
+
+# Create new subnet
+
+SUBNETID=$(aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 172.31.0.0/20 --query Subnet.SubnetId --output text)
+
+echo "SUBNETID: $SUBNETID"
+
+# auto assign IPv4 addresses
+
+aws ec2 modify-subnet-attribute --subnet-id $SUBNETID --map-public-ip-on-launch
+
+# Explicitly Associate subnet
+
+RT_ID=$(aws ec2 describe-route-tables --filters "Name=vpc-id,Values=$VPC_ID" "Name=association.main,Values=true" --query "RouteTables[].RouteTableId[]" --output text)
+
+echo "RT_ID: $RT_ID"
+
+aws ec2 associate-route-table --route-table-id $RT_ID --subnet-id $SUBNETID
+
+# Add route for route table to IGW
+
+aws ec2 create-route --route-table-id $RT_ID --destination-cidr-block 0.0.0.0/0 --gateway-id $IGW_ID
+
+echo "./delete_vpc $VPC_ID $IGW_ID $SUBNETID $RT_ID"
