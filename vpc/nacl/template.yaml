@@ -1,19 +1,34 @@
-AWSTemplateFormatVersion: version date
-
+AWSTemplateFormatVersion: "2010-09-09"
 Description: Launch simple EC2 for NACL Example
-
+Parameters:
+  VpcID: 
+    Type: String
+    Default: ""
+  SubnetId:
+    Type: String
+    Default: ""
 Resources: 
  MyEC2Instance: 
     Type: AWS::EC2::Instance
     Properties: 
-      ImageId: "ami-79fd7eee"
-      KeyName: "testkey"
-      BlockDeviceMappings: 
-      - DeviceName: "/dev/sdm"
-        Ebs: 
-          VolumeType: "io1"
-          Iops: "200"
-          DeleteOnTermination: "false"
-          VolumeSize: "20"
-      - DeviceName: "/dev/sdk"
-        NoDevice: {}
+      InstanceType: "t3.micro"
+      ImageId: "ami-01edba92f9036f76e"
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds:
+        - !GetAtt Sg.GroupId
+SG:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: Allow http to client host
+    VpcId: !Ref VpcID
+    SecurityGroupIngress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+    SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+  
