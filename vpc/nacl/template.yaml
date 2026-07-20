@@ -8,14 +8,39 @@ Parameters:
     Type: String
     Default: ""
 Resources: 
- MyEC2Instance: 
-    Type: AWS::EC2::Instance
-    Properties: 
-      InstanceType: "t3.micro"
-      ImageId: "ami-01edba92f9036f76e"
-      SubnetId: !Ref SubnetId
-      SecurityGroupIds:
-        - !GetAtt Sg.GroupId
+  SSMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: 
+          - Effect: Allow
+            Principal: 
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  EC2InstanceProfile:
+    Type: AWS::IAM::IamInstanceProfile
+    Properties:
+      Roles:
+        - !Ref SSMRole
+  MyEC2Instance: 
+      Type: AWS::EC2::Instance
+      Properties: 
+        IamInstanceProfile: !Ref EC2InstanceProfile
+        InstanceType: "t3.micro"
+        ImageId: "ami-01edba92f9036f76e"
+        # SubnetId: !Ref SubnetId
+        # SecurityGroupIds:
+        #   - !GetAtt Sg.GroupId
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            SubnetId: !Ref SubnetId
+            AssociatePublicIpAddress: true
+            GroupSet:
+              - !GetAtt SG.GroupId
+            DeleteOnTermination: true
 SG:
   Type: AWS::EC2::SecurityGroup
   Properties:
