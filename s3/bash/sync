@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+echo "==sync"
+set -e
+
+#check for bucket name
+if [ -z "$1" ]; then
+    echo "There needs to be a bucket name eg. ./bucket my-bucket-name"
+    exit 1
+fi
+
+# check for filename prefix
+if [ -z "$2" ]; then
+    echo "There needs to be a bucket name eg. ./bucket my-bucket-name"
+    exit 1
+fi
+
+# where to store files
+OUTPUT_DIR="/tmp/s3-bash"
+
+rm -r $OUTPUT_DIR
+
+# create output folder
+mkdir -p $OUTPUT_DIR
+
+# random number
+NUM_FILES=$((RANDOM % 6 + 5))
+
+for ((i=1; i<=$NUM_FILES; i++)); do
+    FILENAME="$OUTPUT_DIR/file_$i.txt"
+
+    dd if=/dev/urandom of="$FILENAME" bs=1024 count=$((RANDOM % 1024 + 1)) 2>/dev/null
+done
+
+tree $OUTPUT_DIR
+
+aws s3 sync $OUTPUT_DIR s3://$1/files

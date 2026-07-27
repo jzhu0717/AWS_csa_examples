@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+root_path=$(realpath .)
+message_att_path="file://${root_path}/send-message.json"
+QUEUE_URL=https://sqs.us-east-1.amazonaws.com/029179923921/sqs-standard-MyQueue-ecf53IkqBksM
+echo "== send"
+
+aws sqs send-message --queue-url $QUEUE_URL --message-body "hello mars" --delay-seconds 0 --message-attributes $message_att_path
