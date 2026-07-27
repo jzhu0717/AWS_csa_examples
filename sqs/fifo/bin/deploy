@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+echo "== deploy SQS fifo"
+
+STACK_NAME="sqs-fifo"
+
+root_path=$(realpath .)
+template_path="${root_path}/template.yaml"
+
+aws cloudformation deploy --template-file $template_path --capabilities CAPABILITY_IAM --no-execute-changeset --region us-east-1 --stack-name $STACK_NAME
